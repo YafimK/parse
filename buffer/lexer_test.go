@@ -10,11 +10,10 @@ import (
 
 func TestLexer(t *testing.T) {
 	s := `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`
-	z := NewLexer(bytes.NewBufferString(s))
+	z := NewLexerBytes([]byte(s))
 
 	test.Bytes(t, z.Bytes(), []byte(s), "bytes match original buffer")
 
-	test.T(t, z.err, nil, "buffer has no error")
 	test.T(t, z.Err(), nil, "buffer is at EOF but must not return EOF until we reach that")
 	test.That(t, z.Pos() == 0, "buffer must start at position 0")
 	test.That(t, z.Peek(0) == 'L', "first character must be 'L'")
@@ -44,11 +43,10 @@ func TestLexer(t *testing.T) {
 	test.T(t, z.Err(), io.EOF, "error must be EOF when past the buffer")
 	z.Move(-1)
 	test.T(t, z.Err(), nil, "error must be nil just before the end of the buffer, even when it has been past the buffer")
-
 }
 
 func TestLexerRunes(t *testing.T) {
-	z := NewLexer(bytes.NewBufferString("aæ†\U00100000"))
+	z := NewLexerBytes([]byte("aæ†\U00100000"))
 	r, n := z.PeekRune(0)
 	test.That(t, n == 1, "first character must be length 1")
 	test.That(t, r == 'a', "first character must be rune 'a'")
@@ -64,46 +62,34 @@ func TestLexerRunes(t *testing.T) {
 }
 
 func TestLexerBadRune(t *testing.T) {
-	z := NewLexer(bytes.NewBufferString("\xF0")) // expect four byte rune
+	z := NewLexerBytes([]byte("\xF0")) // expect four byte rune
 	r, n := z.PeekRune(0)
 	test.T(t, n, 1, "length")
 	test.T(t, r, rune(0xF0), "rune")
 }
 
 func TestLexerZeroLen(t *testing.T) {
-	z := NewLexer(test.NewPlainReader(bytes.NewBufferString("")))
+	z, err := NewLexer(test.NewPlainReader(bytes.NewBufferString("")))
+    test.Error(t, err)
 	test.That(t, z.Peek(0) == 0, "first character must yield error")
 	test.Bytes(t, z.Bytes(), []byte{}, "bytes match original buffer")
 }
 
 func TestLexerEmptyReader(t *testing.T) {
-	z := NewLexer(test.NewEmptyReader())
+	z, err := NewLexer(test.NewEmptyReader())
+    test.Error(t, err)
 	test.That(t, z.Peek(0) == 0, "first character must yield error")
 	test.T(t, z.Err(), io.EOF, "error must be EOF")
 	test.That(t, z.Peek(0) == 0, "second peek must also yield error")
 }
 
 func TestLexerErrorReader(t *testing.T) {
-	z := NewLexer(test.NewErrorReader(0))
-	test.That(t, z.Peek(0) == 0, "first character must yield error")
-	test.T(t, z.Err(), test.ErrPlain, "error must be ErrPlain")
-	test.That(t, z.Peek(0) == 0, "second peek must also yield error")
+	_, err := NewLexer(test.NewErrorReader(0))
+    test.T(t, err, test.ErrPlain)
 }
 
 func TestLexerBytes(t *testing.T) {
 	b := []byte{'t', 'e', 's', 't'}
 	z := NewLexerBytes(b)
 	test.That(t, z.Peek(4) == 0, "fifth character must yield NULL")
-}
-
-func TestLexerRestore(t *testing.T) {
-	b := []byte{'a', 'b', 'c', 'd'}
-	z := NewLexerBytes(b[:2])
-
-	test.T(t, len(z.buf), 3, "must have terminating NULL")
-	test.T(t, z.buf[2], byte(0), "must have terminating NULL")
-	test.Bytes(t, b, []byte{'a', 'b', 0, 'd'}, "terminating NULL overwrites underlying buffer")
-
-	z.Restore()
-	test.Bytes(t, b, []byte{'a', 'b', 'c', 'd'}, "terminating NULL has been restored")
 }

@@ -1,7 +1,6 @@
 package json // import "github.com/tdewolff/parse/json"
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"testing"
@@ -39,7 +38,7 @@ func TestGrammars(t *testing.T) {
 	}
 	for _, tt := range grammarTests {
 		t.Run(tt.json, func(t *testing.T) {
-			p := NewParser(bytes.NewBufferString(tt.json))
+			p := NewParserBytes([]byte(tt.json))
 			i := 0
 			for {
 				grammar, _ := p.Next()
@@ -81,7 +80,7 @@ func TestGrammarsErrorEOF(t *testing.T) {
 	}
 	for _, tt := range grammarErrorTests {
 		t.Run(tt.json, func(t *testing.T) {
-			p := NewParser(bytes.NewBufferString(tt.json))
+			p := NewParserBytes([]byte(tt.json))
 			for {
 				grammar, _ := p.Next()
 				if grammar == ErrorGrammar {
@@ -111,7 +110,7 @@ func TestGrammarsError(t *testing.T) {
 	}
 	for _, tt := range grammarErrorTests {
 		t.Run(tt.json, func(t *testing.T) {
-			p := NewParser(bytes.NewBufferString(tt.json))
+			p := NewParserBytes([]byte(tt.json))
 			for {
 				grammar, _ := p.Next()
 				if grammar == ErrorGrammar {
@@ -139,7 +138,7 @@ func TestStates(t *testing.T) {
 	}
 	for _, tt := range stateTests {
 		t.Run(tt.json, func(t *testing.T) {
-			p := NewParser(bytes.NewBufferString(tt.json))
+			p := NewParserBytes([]byte(tt.json))
 			i := 0
 			for {
 				grammar, _ := p.Next()
@@ -164,7 +163,7 @@ func TestStates(t *testing.T) {
 ////////////////////////////////////////////////////////////////
 
 func ExampleNewParser() {
-	p := NewParser(bytes.NewBufferString(`{"key": 5}`))
+	p := NewParserBytes([]byte(`{"key": 5}`))
 	out := ""
 	for {
 		state := p.State()

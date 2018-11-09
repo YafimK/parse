@@ -71,10 +71,21 @@ type Lexer struct {
 }
 
 // NewLexer returns a new Lexer for a given io.Reader.
-func NewLexer(r io.Reader) *Lexer {
+func NewLexer(r io.Reader) (*Lexer, error) {
+    lr, err := buffer.NewLexer(r)
+    if err != nil {
+        return nil, err
+    }
 	return &Lexer{
-		r: buffer.NewLexer(r),
-	}
+        r: lr,
+    }, nil
+}
+
+// NewLexerBytes returns a new Lexer for a given []byte.
+func NewLexerBytes(b []byte) *Lexer {
+	return &Lexer{
+        r: buffer.NewLexerBytes(b),
+    }
 }
 
 // Err returns the error encountered during lexing, this is often io.EOF but also other errors can be returned.
@@ -83,11 +94,6 @@ func (l *Lexer) Err() error {
 		return l.err
 	}
 	return l.r.Err()
-}
-
-// Restore restores the NULL byte at the end of the buffer.
-func (l *Lexer) Restore() {
-	l.r.Restore()
 }
 
 // Next returns the next Token. It returns ErrorToken when an error was encountered. Using Err() one can retrieve the error message.

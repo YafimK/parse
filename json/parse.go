@@ -90,9 +90,22 @@ type Parser struct {
 }
 
 // NewParser returns a new Parser for a given io.Reader.
-func NewParser(r io.Reader) *Parser {
+func NewParser(r io.Reader) (*Parser, error) {
+    lr, err := buffer.NewLexer(r)
+    if err != nil {
+        return nil, err
+    }
+	return newParser(lr), nil
+}
+
+// NewParserBytes returns a new Parser for a given []byte.
+func NewParserBytes(b []byte) *Parser {
+    return newParser(buffer.NewLexerBytes(b))
+}
+
+func newParser(r *buffer.Lexer) *Parser {
 	return &Parser{
-		r:     buffer.NewLexer(r),
+		r:     r,
 		state: []State{ValueState},
 	}
 }
@@ -103,11 +116,6 @@ func (p *Parser) Err() error {
 		return p.err
 	}
 	return p.r.Err()
-}
-
-// Restore restores the NULL byte at the end of the buffer.
-func (p *Parser) Restore() {
-	p.r.Restore()
 }
 
 // Next returns the next Grammar. It returns ErrorGrammar when an error was encountered. Using Err() one can retrieve the error message.

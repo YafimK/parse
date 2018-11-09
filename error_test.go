@@ -20,7 +20,7 @@ func TestError(t *testing.T) {
 }
 
 func TestErrorLexer(t *testing.T) {
-	l := buffer.NewLexer(bytes.NewBufferString("buffer"))
+	l := buffer.NewLexerBytes([]byte("buffer"))
 	l.Move(3)
 	err := NewErrorLexer("message", l)
 

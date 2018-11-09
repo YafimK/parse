@@ -1,7 +1,6 @@
 package css // import "github.com/tdewolff/parse/css"
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"testing"
@@ -97,7 +96,7 @@ func TestTokens(t *testing.T) {
 	}
 	for _, tt := range tokenTests {
 		t.Run(tt.css, func(t *testing.T) {
-			l := NewLexer(bytes.NewBufferString(tt.css))
+			l := NewLexerBytes([]byte(tt.css))
 			i := 0
 			for {
 				token, _ := l.Next()
@@ -123,13 +122,13 @@ func TestTokens(t *testing.T) {
 			break
 		}
 	}
-	test.T(t, NewLexer(bytes.NewBufferString("x")).consumeBracket(), ErrorToken, "consumeBracket on 'x' must return error")
+	test.T(t, NewLexerBytes([]byte("x")).consumeBracket(), ErrorToken, "consumeBracket on 'x' must return error")
 }
 
 ////////////////////////////////////////////////////////////////
 
 func ExampleNewLexer() {
-	l := NewLexer(bytes.NewBufferString("color: red;"))
+	l := NewLexerBytes([]byte("color: red;"))
 	out := ""
 	for {
 		tt, data := l.Next()

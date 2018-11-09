@@ -91,13 +91,24 @@ type Parser struct {
 }
 
 // NewParser returns a new CSS parser from an io.Reader. isInline specifies whether this is an inline style attribute.
-func NewParser(r io.Reader, isInline bool) *Parser {
-	l := NewLexer(r)
+func NewParser(r io.Reader, isInline bool) (*Parser, error) {
+	l, err := NewLexer(r)
+    if err != nil {
+        return nil, err
+    }
+    return newParser(l, isInline), nil
+}
+
+// NewParserBytes returns a new Parser for a given []byte.
+func NewParserBytes(b []byte, isInline bool) *Parser {
+    return newParser(NewLexerBytes(b), isInline)
+}
+
+func newParser(l *Lexer, isInline bool) *Parser {
 	p := &Parser{
 		l:     l,
 		state: make([]State, 0, 4),
 	}
-
 	if isInline {
 		p.state = append(p.state, (*Parser).parseDeclarationList)
 	} else {
@@ -112,11 +123,6 @@ func (p *Parser) Err() error {
 		return p.err
 	}
 	return p.l.Err()
-}
-
-// Restore restores the NULL byte at the end of the buffer.
-func (p *Parser) Restore() {
-	p.l.Restore()
 }
 
 // Next returns the next Grammar. It returns ErrorGrammar when an error was encountered. Using Err() one can retrieve the error message.

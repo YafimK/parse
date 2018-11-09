@@ -1,7 +1,6 @@
 package js // import "github.com/tdewolff/parse/js"
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"testing"
@@ -116,7 +115,7 @@ func TestTokens(t *testing.T) {
 
 	for _, tt := range tokenTests {
 		t.Run(tt.js, func(t *testing.T) {
-			l := NewLexer(bytes.NewBufferString(tt.js))
+			l := NewLexerBytes([]byte(tt.js))
 			i := 0
 			j := 0
 			for {
@@ -154,7 +153,7 @@ func TestTokens(t *testing.T) {
 ////////////////////////////////////////////////////////////////
 
 func ExampleNewLexer() {
-	l := NewLexer(bytes.NewBufferString("var x = 'lorem ipsum';"))
+	l := NewLexerBytes([]byte("var x = 'lorem ipsum';"))
 	out := ""
 	for {
 		tt, data := l.Next()

@@ -11,8 +11,20 @@ import (
 // Position returns the line and column number for a certain position in a file. It is useful for recovering the position in a file that caused an error.
 // It only treates \n, \r, and \r\n as newlines, which might be different from some languages also recognizing \f, \u2028, and \u2029 to be newlines.
 func Position(r io.Reader, offset int) (line, col int, context string, err error) {
-	l := buffer.NewLexer(r)
+	l, err := buffer.NewLexer(r)
+    if err != nil {
+        return 0, 0, "", err
+    }
+    return position(l, offset)
+}
 
+// PositionBytes returns the line and column number for a certain position in a file. It is useful for recovering the position in a file that caused an error.
+// It only treates \n, \r, and \r\n as newlines, which might be different from some languages also recognizing \f, \u2028, and \u2029 to be newlines.
+func PositionBytes(b []byte, offset int) (line, col int, context string, err error) {
+    return position(buffer.NewLexerBytes(b), offset)
+}
+
+func position(l *buffer.Lexer, offset int) (line, col int, context string, err error) {
 	line = 1
 	for {
 		c := l.Peek(0)
