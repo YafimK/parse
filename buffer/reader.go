@@ -42,3 +42,23 @@ func (r *Reader) Reset() {
 func (r *Reader) Len() int {
 	return len(r.buf)
 }
+
+////////////////
+
+// Bytes implements an io.Reader over a byte slice.
+type Bytes []byte
+
+// NewReader returns a new Reader for a given byte slice.
+func NewBytes(buf []byte) Bytes {
+	return Bytes(buf)
+}
+
+// Read reads bytes into the given byte slice and returns the number of bytes read and an error if occurred.
+func (r Bytes) Read(b []byte) (int, error) {
+	panic("not implemented")
+}
+
+// Bytes returns the underlying byte slice.
+func (r Bytes) Bytes() []byte {
+	return r
+}
