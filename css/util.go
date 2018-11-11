@@ -4,19 +4,19 @@ import "github.com/tdewolff/parse/v2/buffer"
 
 // IsIdent returns true if the bytes are a valid identifier.
 func IsIdent(b []byte) bool {
-    bt, restore := buffer.NullTerminator(b)
+	bt, restorer := buffer.NullTerminator(b)
 	l := NewLexerBytes(bt)
 	l.consumeIdentToken()
-	restore()
+	restorer.Restore()
 	return l.r.Pos() == len(b)
 }
 
 // IsURLUnquoted returns true if the bytes are a valid unquoted URL.
 func IsURLUnquoted(b []byte) bool {
-    bt, restore := buffer.NullTerminator(b)
+	bt, restorer := buffer.NullTerminator(b)
 	l := NewLexerBytes(bt)
 	l.consumeUnquotedURL()
-	restore()
+	restorer.Restore()
 	return l.r.Pos() == len(b)
 }
 
