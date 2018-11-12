@@ -46,19 +46,32 @@ func (r *Reader) Len() int {
 ////////////////
 
 // Bytes implements an io.Reader over a byte slice.
-type Bytes []byte
+type Bytes struct {
+    buf []byte
+    pos int
+}
 
-// NewReader returns a new Reader for a given byte slice.
-func NewBytes(buf []byte) Bytes {
-	return Bytes(buf)
+// NewBytesReader returns a new Bytes that satisfies io.Reader for a given byte slice.
+func NewBytesReader(buf []byte) *Bytes {
+	return &Bytes{
+        buf: buf,
+    }
 }
 
 // Read reads bytes into the given byte slice and returns the number of bytes read and an error if occurred.
-func (r Bytes) Read(b []byte) (int, error) {
-	panic("not implemented")
+func (r *Bytes) Read(b []byte) (n int, err error) {
+	if len(b) == 0 {
+		return 0, nil
+	}
+	if r.pos >= len(r.buf) {
+		return 0, io.EOF
+	}
+	n = copy(b, r.buf[r.pos:])
+	r.pos += n
+	return
 }
 
 // Bytes returns the underlying byte slice.
-func (r Bytes) Bytes() []byte {
-	return r
+func (r *Bytes) Bytes() []byte {
+	return r.buf
 }
