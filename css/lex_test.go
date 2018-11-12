@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/tdewolff/test"
+	"github.com/tdewolff/parse/v2/buffer"
 )
 
 type TTs []TokenType
@@ -96,7 +97,7 @@ func TestTokens(t *testing.T) {
 	}
 	for _, tt := range tokenTests {
 		t.Run(tt.css, func(t *testing.T) {
-			l := NewLexerBytes([]byte(tt.css))
+			l := NewLexer(buffer.NewString(tt.css))
 			i := 0
 			for {
 				token, _ := l.Next()
@@ -122,13 +123,13 @@ func TestTokens(t *testing.T) {
 			break
 		}
 	}
-	test.T(t, NewLexerBytes([]byte("x")).consumeBracket(), ErrorToken, "consumeBracket on 'x' must return error")
+	test.T(t, NewLexer(buffer.NewString("x")).consumeBracket(), ErrorToken, "consumeBracket on 'x' must return error")
 }
 
 ////////////////////////////////////////////////////////////////
 
 func ExampleNewLexer() {
-	l := NewLexerBytes([]byte("color: red;"))
+	l := NewLexer(buffer.NewString("color: red;"))
 	out := ""
 	for {
 		tt, data := l.Next()

@@ -10,9 +10,7 @@ import (
 
 func TestLexer(t *testing.T) {
 	s := `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`
-	z := NewLexerBytes([]byte(s))
-
-	test.Bytes(t, z.Bytes(), []byte(s), "bytes match original buffer")
+	z := New([]byte(s))
 
 	test.T(t, z.Err(), nil, "buffer is at EOF but must not return EOF until we reach that")
 	test.That(t, z.Pos() == 0, "buffer must start at position 0")
@@ -46,7 +44,7 @@ func TestLexer(t *testing.T) {
 }
 
 func TestLexerRunes(t *testing.T) {
-	z := NewLexerBytes([]byte("aæ†\U00100000"))
+	z := New([]byte("aæ†\U00100000"))
 	r, n := z.PeekRune(0)
 	test.That(t, n == 1, "first character must be length 1")
 	test.That(t, r == 'a', "first character must be rune 'a'")
@@ -62,21 +60,20 @@ func TestLexerRunes(t *testing.T) {
 }
 
 func TestLexerBadRune(t *testing.T) {
-	z := NewLexerBytes([]byte("\xF0")) // expect four byte rune
+	z := New([]byte("\xF0")) // expect four byte rune
 	r, n := z.PeekRune(0)
 	test.T(t, n, 1, "length")
 	test.T(t, r, rune(0xF0), "rune")
 }
 
 func TestLexerZeroLen(t *testing.T) {
-	z, err := NewLexer(test.NewPlainReader(bytes.NewBufferString("")))
+	z, err := NewReader(test.NewPlainReader(bytes.NewBufferString("")))
     test.Error(t, err)
 	test.That(t, z.Peek(0) == 0, "first character must yield error")
-	test.Bytes(t, z.Bytes(), []byte{}, "bytes match original buffer")
 }
 
 func TestLexerEmptyReader(t *testing.T) {
-	z, err := NewLexer(test.NewEmptyReader())
+	z, err := NewReader(test.NewEmptyReader())
     test.Error(t, err)
 	test.That(t, z.Peek(0) == 0, "first character must yield error")
 	test.T(t, z.Err(), io.EOF, "error must be EOF")
@@ -84,12 +81,12 @@ func TestLexerEmptyReader(t *testing.T) {
 }
 
 func TestLexerErrorReader(t *testing.T) {
-	_, err := NewLexer(test.NewErrorReader(0))
+	_, err := NewReader(test.NewErrorReader(0))
     test.T(t, err, test.ErrPlain)
 }
 
 func TestLexerBytes(t *testing.T) {
 	b := []byte{'t', 'e', 's', 't'}
-	z := NewLexerBytes(b)
+	z := New(b)
 	test.That(t, z.Peek(4) == 0, "fifth character must yield NULL")
 }

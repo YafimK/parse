@@ -1,7 +1,6 @@
 package parse
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/tdewolff/parse/v2/buffer"
@@ -9,7 +8,7 @@ import (
 )
 
 func TestError(t *testing.T) {
-	err := NewError("message", bytes.NewBufferString("buffer"), 3)
+	err := NewError("message", buffer.NewString("buffer"), 3)
 
 	line, column, context := err.Position()
 	test.T(t, line, 1, "line")
@@ -20,7 +19,7 @@ func TestError(t *testing.T) {
 }
 
 func TestErrorLexer(t *testing.T) {
-	l := buffer.NewLexerBytes([]byte("buffer"))
+	l := buffer.NewString("buffer")
 	l.Move(3)
 	err := NewErrorLexer("message", l)
 

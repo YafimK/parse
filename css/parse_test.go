@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/tdewolff/parse/v2"
+	"github.com/tdewolff/parse/v2/buffer"
 	"github.com/tdewolff/test"
 )
 
@@ -112,7 +113,7 @@ func TestParse(t *testing.T) {
 	for _, tt := range parseTests {
 		t.Run(tt.css, func(t *testing.T) {
 			output := ""
-			p := NewParserBytes([]byte(tt.css), tt.inline)
+			p := NewParser(buffer.NewString(tt.css), tt.inline)
 			for {
 				grammar, _, data := p.Next()
 				data = parse.Copy(data)
@@ -169,7 +170,7 @@ func TestParseError(t *testing.T) {
 	}
 	for _, tt := range parseErrorTests {
 		t.Run(tt.css, func(t *testing.T) {
-			p := NewParserBytes([]byte(tt.css), tt.inline)
+			p := NewParser(buffer.NewString(tt.css), tt.inline)
 			for {
 				grammar, _, _ := p.Next()
 				if grammar == ErrorGrammar {
@@ -190,8 +191,9 @@ func TestParseError(t *testing.T) {
 
 func TestReader(t *testing.T) {
 	input := "x:a;"
-	p, err := NewParser(test.NewPlainReader(bytes.NewBufferString(input)), true)
+	l, err := buffer.NewReader(test.NewPlainReader(bytes.NewBufferString(input)))
     test.Error(t, err, nil)
+	p := NewParser(l, true)
 	for {
 		grammar, _, _ := p.Next()
 		if grammar == ErrorGrammar {
@@ -224,7 +226,7 @@ func BenchmarkMemFuncPtr(b *testing.B) {
 }
 
 func ExampleNewParser() {
-	p := NewParserBytes([]byte("color: red;"), true) // false because this is the content of an inline style attribute
+	p := NewParser(buffer.NewString("color: red;"), true) // false because this is the content of an inline style attribute
 	out := ""
 	for {
 		gt, _, data := p.Next()

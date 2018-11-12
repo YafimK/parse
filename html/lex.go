@@ -2,7 +2,6 @@
 package html // import "github.com/tdewolff/parse/html"
 
 import (
-	"io"
 	"strconv"
 
 	"github.com/tdewolff/parse/v2"
@@ -70,21 +69,10 @@ type Lexer struct {
 	attrVal []byte
 }
 
-// NewLexer returns a new Lexer for a given io.Reader.
-func NewLexer(r io.Reader) (*Lexer, error) {
-    lr, err := buffer.NewLexer(r)
-    if err != nil {
-        return nil, err
-    }
+// NewLexer returns a new Lexer for a given buffer.Lexer.
+func NewLexer(bl *buffer.Lexer) *Lexer {
 	return &Lexer{
-        r: lr,
-    }, nil
-}
-
-// NewLexerBytes returns a new Lexer for a given []byte.
-func NewLexerBytes(b []byte) *Lexer {
-	return &Lexer{
-        r: buffer.NewLexerBytes(b),
+        r: bl,
     }
 }
 

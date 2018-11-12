@@ -1,11 +1,11 @@
 package parse
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"testing"
 
+	"github.com/tdewolff/parse/v2/buffer"
 	"github.com/tdewolff/test"
 )
 
@@ -34,8 +34,8 @@ func TestPosition(t *testing.T) {
 	}
 	for _, tt := range newlineTests {
 		t.Run(fmt.Sprint(tt.buf, " ", tt.offset), func(t *testing.T) {
-			r := bytes.NewBufferString(tt.buf)
-			line, col, _, err := Position(r, tt.offset)
+			l := buffer.NewString(tt.buf)
+			line, col, _, err := Position(l, tt.offset)
 			test.T(t, err, tt.err)
 			test.T(t, line, tt.line, "line")
 			test.T(t, col, tt.col, "column")

@@ -2,10 +2,10 @@ package css // import "github.com/tdewolff/parse/css"
 
 import (
 	"bytes"
-	"io"
 	"strconv"
 
 	"github.com/tdewolff/parse/v2"
+	"github.com/tdewolff/parse/v2/buffer"
 )
 
 var wsBytes = []byte(" ")
@@ -90,23 +90,10 @@ type Parser struct {
 	prevComment bool
 }
 
-// NewParser returns a new CSS parser from an io.Reader. isInline specifies whether this is an inline style attribute.
-func NewParser(r io.Reader, isInline bool) (*Parser, error) {
-	l, err := NewLexer(r)
-    if err != nil {
-        return nil, err
-    }
-    return newParser(l, isInline), nil
-}
-
-// NewParserBytes returns a new Parser for a given []byte.
-func NewParserBytes(b []byte, isInline bool) *Parser {
-    return newParser(NewLexerBytes(b), isInline)
-}
-
-func newParser(l *Lexer, isInline bool) *Parser {
+// NewParser returns a new CSS parser from a buffer.Lexer. isInline specifies whether this is an inline style attribute.
+func NewParser(bl *buffer.Lexer, isInline bool) *Parser {
 	p := &Parser{
-		l:     l,
+		l:     NewLexer(bl),
 		state: make([]State, 0, 4),
 	}
 	if isInline {

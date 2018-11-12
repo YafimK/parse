@@ -2,7 +2,6 @@
 package json // import "github.com/tdewolff/parse/json"
 
 import (
-	"io"
 	"strconv"
 
 	"github.com/tdewolff/parse/v2"
@@ -89,23 +88,10 @@ type Parser struct {
 	needComma bool
 }
 
-// NewParser returns a new Parser for a given io.Reader.
-func NewParser(r io.Reader) (*Parser, error) {
-    lr, err := buffer.NewLexer(r)
-    if err != nil {
-        return nil, err
-    }
-	return newParser(lr), nil
-}
-
-// NewParserBytes returns a new Parser for a given []byte.
-func NewParserBytes(b []byte) *Parser {
-    return newParser(buffer.NewLexerBytes(b))
-}
-
-func newParser(r *buffer.Lexer) *Parser {
+// NewParser returns a new Parser for a given buffer.Lexer.
+func NewParser(bl *buffer.Lexer) *Parser {
 	return &Parser{
-		r:     r,
+		r:     bl,
 		state: []State{ValueState},
 	}
 }

@@ -13,17 +13,18 @@ type Lexer struct {
 	buf   []byte
 	pos   int // index in buf
 	start int // index in buf
+    restorer NullRestorer
 }
 
-// NewLexerBytes returns a new Lexer for a given io.Reader and uses ioutil.ReadAll to read it into a byte slice.
+// NewReader returns a new Lexer for a given io.Reader and uses ioutil.ReadAll to read it into a byte slice.
 // If the io.Reader has Bytes implemented, that will be used instead.
 // It will append a NULL at the end of the buffer.
-func NewLexer(r io.Reader) (*Lexer, error) {
+func NewReader(r io.Reader) (*Lexer, error) {
     // Use Bytes() if implemented
     if buffer, ok := r.(interface {
         Bytes() []byte
     }); ok {
-	    return NewLexerBytes(buffer.Bytes()), nil
+	    return New(buffer.Bytes()), nil
     }
 
     // Otherwise, read in everything
@@ -31,20 +32,29 @@ func NewLexer(r io.Reader) (*Lexer, error) {
     if err != nil {
         return nil, err
     }
-	return NewLexerBytes(b), nil
+	return New(b), nil // TODO: don't use restorer, use custom ReadAll that already adds a NULL
 }
 
-// NewLexerBytes returns a new Lexer for a given byte slice and appends NULL at the end.
+// NewString returns a new Lexer for a given string.
+func NewString(s string) *Lexer {
+    return New([]byte(s)) // TODO: allocate one more byte
+}
+
+// New returns a new Lexer for a given byte slice and appends NULL at the end.
 // To avoid reallocation, make sure the capacity has room for one more byte.
-func NewLexerBytes(b []byte) *Lexer {
+func New(b []byte) *Lexer {
+	l := &Lexer{}
 	if len(b) == 0 {
-		b = nullBuffer
-	} else if b[len(b)-1] != 0 {
-        b = append(b, 0)
+		l.buf = nullBuffer
+	} else {
+        l.buf, l.restorer = NullTerminator(b)
 	}
-	return &Lexer{
-        buf: b,
-    }
+    return l
+}
+
+// Close needs to be called when done with the lexer.
+func (z *Lexer) Close() {
+    z.restorer.Restore()
 }
 
 // Err returns io.EOF when the current position is at the end of the buffer.
@@ -122,7 +132,7 @@ func (z *Lexer) Offset() int {
 	return z.pos
 }
 
-// Bytes returns the underlying buffer.
+// Buffer returns the underlying buffer.
 func (z *Lexer) Bytes() []byte {
-	return z.buf[:len(z.buf)-1] // don't return the terminating NULL character
+    return z.buf[:len(z.buf)-1]
 }

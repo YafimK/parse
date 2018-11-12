@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/tdewolff/parse/v2"
+	"github.com/tdewolff/parse/v2/buffer"
 	"github.com/tdewolff/test"
 )
 
@@ -81,7 +82,7 @@ func TestTokens(t *testing.T) {
 	}
 	for _, tt := range tokenTests {
 		t.Run(tt.html, func(t *testing.T) {
-			l := NewLexerBytes([]byte(tt.html))
+			l := NewLexer(buffer.NewString(tt.html))
 			i := 0
 			for {
 				token, _ := l.Next()
@@ -122,7 +123,7 @@ func TestTags(t *testing.T) {
 	}
 	for _, tt := range tagTests {
 		t.Run(tt.html, func(t *testing.T) {
-			l := NewLexerBytes([]byte(tt.html))
+			l := NewLexer(buffer.NewString(tt.html))
 			for {
 				token, _ := l.Next()
 				if token == ErrorToken {
@@ -161,7 +162,7 @@ func TestAttributes(t *testing.T) {
 	}
 	for _, tt := range attributeTests {
 		t.Run(tt.attr, func(t *testing.T) {
-			l := NewLexerBytes([]byte(tt.attr))
+			l := NewLexer(buffer.NewString(tt.attr))
 			i := 0
 			for {
 				token, _ := l.Next()
@@ -192,7 +193,7 @@ func TestErrors(t *testing.T) {
 	}
 	for _, tt := range errorTests {
 		t.Run(tt.html, func(t *testing.T) {
-			l := NewLexerBytes([]byte(tt.html))
+			l := NewLexer(buffer.NewString(tt.html))
 			for {
 				token, _ := l.Next()
 				if token == ErrorToken {
@@ -273,7 +274,7 @@ func BenchmarkWhitespace3(b *testing.B) {
 ////////////////////////////////////////////////////////////////
 
 func ExampleNewLexer() {
-	l := NewLexerBytes([]byte("<span class='user'>John Doe</span>"))
+	l := NewLexer(buffer.NewString("<span class='user'>John Doe</span>"))
 	out := ""
 	for {
 		tt, data := l.Next()
