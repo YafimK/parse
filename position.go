@@ -20,38 +20,39 @@ func Position(r io.Reader, offset int) (line, col int, context string) {
 	line = 1
 	for {
 		c := l.Peek(0)
-		if c == 0 && l.IsEOF() {
+		if c == 0 && l.IsEOF() || offset == l.Pos() {
 			col = l.Pos() + 1
 			context = positionContext(l, line, col)
 			return
 		}
 
-		if offset == l.Pos() {
-			col = l.Pos() + 1
-			context = positionContext(l, line, col)
-			return
-		}
-
+		nNewline := 0
 		if c == '\n' {
-			l.Move(1)
-			line++
-			offset -= l.Pos()
-			l.Skip()
+			nNewline = 1
 		} else if c == '\r' {
 			if l.Peek(1) == '\n' {
-				if offset == l.Pos()+1 {
-					l.Move(1)
-					continue
-				}
-				l.Move(2)
+				nNewline = 2
 			} else {
-				l.Move(1)
+				nNewline = 1
 			}
+		} else if c >= 0xC0 {
+			if r, n := l.PeekRune(0); r == '\u2028' || r == '\u2029' {
+				nNewline = n
+			}
+		} else {
+			l.Move(1)
+		}
+
+		if nNewline > 0 {
+			if offset < l.Pos()+nNewline {
+				// move onto offset position, let next iteration handle it
+				l.Move(offset - l.Pos())
+				continue
+			}
+			l.Move(nNewline)
 			line++
 			offset -= l.Pos()
 			l.Skip()
-		} else {
-			l.Move(1)
 		}
 	}
 }
