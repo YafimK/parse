@@ -56,6 +56,14 @@ func NewLexer(b []byte) *Lexer {
 	return l
 }
 
+// NewLexerView creates a new view on the underlying buffer with all positions zero.
+// Do not call Restore() on the original Lexer while this view is being used.
+func NewLexerView(l *Lexer) *Lexer {
+	return &Lexer{
+		buf: l.buf,
+	}
+}
+
 // Restore needs to be called when done with the lexer in some cases.
 func (z *Lexer) Restore() {
 	z.restorer.Restore()
@@ -127,9 +135,4 @@ func (z *Lexer) Shift() []byte {
 // Offset returns the character position in the buffer.
 func (z *Lexer) Offset() int {
 	return z.pos
-}
-
-// Buffer returns the underlying buffer.
-func (z *Lexer) Buffer() []byte {
-	return z.buf[:len(z.buf)-1]
 }

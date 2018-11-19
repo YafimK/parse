@@ -312,7 +312,7 @@ func (p *Parser) parseQualifiedRule() GrammarType {
 			p.state = append(p.state, (*Parser).parseQualifiedRuleDeclarationList)
 			return BeginRulesetGrammar
 		} else if tt == ErrorToken {
-			p.err = parse.NewErrorLexer("unexpected ending in qualified rule, expected left brace token", p.l.r)
+			p.err = parse.NewErrorLexer("expected left brace in qualified rule", p.l.r)
 			return ErrorGrammar
 		} else if tt == LeftParenthesisToken || tt == LeftBraceToken || tt == LeftBracketToken || tt == FunctionToken {
 			p.level++
@@ -355,7 +355,7 @@ func (p *Parser) parseDeclaration() GrammarType {
 
 	tt, data := p.popToken(false)
 	if tt != ColonToken {
-		p.err = parse.NewErrorLexer("unexpected token in declaration", p.l.r)
+		p.err = parse.NewErrorLexer("expected colon in declaration", p.l.r)
 		return p.parseDeclarationError(tt, data, false)
 	}
 
@@ -414,7 +414,7 @@ func (p *Parser) parseDeclarationError(tt TokenType, data []byte, skipFirstPush 
 func (p *Parser) parseCustomProperty() GrammarType {
 	p.initBuf()
 	if tt, _ := p.popToken(false); tt != ColonToken {
-		p.err = parse.NewErrorLexer("unexpected token in declaration", p.l.r)
+		p.err = parse.NewErrorLexer("expected colon in custom property", p.l.r)
 		return ErrorGrammar
 	}
 	val := []byte{}
