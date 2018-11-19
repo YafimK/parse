@@ -192,7 +192,7 @@ func TestParseError(t *testing.T) {
 func TestReader(t *testing.T) {
 	input := "x:a;"
 	l, err := buffer.NewLexerReader(test.NewPlainReader(bytes.NewBufferString(input)))
-	test.Error(t, err, nil)
+	test.Error(t, err)
 	p := NewParser(l, true)
 	for {
 		grammar, _, _ := p.Next()
