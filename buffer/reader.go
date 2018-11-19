@@ -47,15 +47,15 @@ func (r *Reader) Len() int {
 
 // Bytes implements an io.Reader over a byte slice.
 type Bytes struct {
-    buf []byte
-    pos int
+	buf []byte
+	pos int
 }
 
 // NewBytesReader returns a new Bytes that satisfies io.Reader for a given byte slice.
 func NewBytesReader(buf []byte) *Bytes {
 	return &Bytes{
-        buf: buf,
-    }
+		buf: buf,
+	}
 }
 
 // Read reads bytes into the given byte slice and returns the number of bytes read and an error if occurred.

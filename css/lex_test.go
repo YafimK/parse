@@ -5,8 +5,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/tdewolff/test"
 	"github.com/tdewolff/parse/v2/buffer"
+	"github.com/tdewolff/test"
 )
 
 type TTs []TokenType

@@ -101,11 +101,11 @@ type Lexer struct {
 // NewLexer returns a new Lexer for a given buffer.Lexer.
 func NewLexer(bl *buffer.Lexer) *Lexer {
 	return &Lexer{
-        r: bl,
+		r:         bl,
 		stack:     make([]ParsingContext, 0, 16),
 		state:     ExprState,
 		emptyLine: true,
-    }
+	}
 }
 
 func (l *Lexer) enterContext(context ParsingContext) {

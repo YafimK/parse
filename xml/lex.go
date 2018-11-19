@@ -74,8 +74,8 @@ type Lexer struct {
 // NewLexer returns a new Lexer for a given buffer.Lexer.
 func NewLexer(bl *buffer.Lexer) *Lexer {
 	return &Lexer{
-        r: bl,
-    }
+		r: bl,
+	}
 }
 
 // Err returns the error encountered during lexing, this is often io.EOF but also other errors can be returned.

@@ -68,13 +68,13 @@ func TestLexerBadRune(t *testing.T) {
 
 func TestLexerZeroLen(t *testing.T) {
 	z, err := NewReader(test.NewPlainReader(bytes.NewBufferString("")))
-    test.Error(t, err)
+	test.Error(t, err)
 	test.That(t, z.Peek(0) == 0, "first character must yield error")
 }
 
 func TestLexerEmptyReader(t *testing.T) {
 	z, err := NewReader(test.NewEmptyReader())
-    test.Error(t, err)
+	test.Error(t, err)
 	test.That(t, z.Peek(0) == 0, "first character must yield error")
 	test.T(t, z.Err(), io.EOF, "error must be EOF")
 	test.That(t, z.Peek(0) == 0, "second peek must also yield error")
@@ -82,7 +82,7 @@ func TestLexerEmptyReader(t *testing.T) {
 
 func TestLexerErrorReader(t *testing.T) {
 	_, err := NewReader(test.NewErrorReader(0))
-    test.T(t, err, test.ErrPlain)
+	test.T(t, err, test.ErrPlain)
 }
 
 func TestLexerBytes(t *testing.T) {

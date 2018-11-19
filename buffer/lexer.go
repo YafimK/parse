@@ -10,34 +10,34 @@ var nullBuffer = []byte{0}
 // Lexer is a buffered reader that allows peeking forward and shifting, taking an io.Reader.
 // It keeps data in-memory until Free, taking a byte length, is called to move beyond the data.
 type Lexer struct {
-	buf   []byte
-	pos   int // index in buf
-	start int // index in buf
-    restorer NullRestorer
+	buf      []byte
+	pos      int // index in buf
+	start    int // index in buf
+	restorer NullRestorer
 }
 
 // NewReader returns a new Lexer for a given io.Reader and uses ioutil.ReadAll to read it into a byte slice.
 // If the io.Reader has Bytes implemented, that will be used instead.
 // It will append a NULL at the end of the buffer.
 func NewReader(r io.Reader) (*Lexer, error) {
-    // Use Bytes() if implemented
-    if buffer, ok := r.(interface {
-        Bytes() []byte
-    }); ok {
-	    return New(buffer.Bytes()), nil
-    }
+	// Use Bytes() if implemented
+	if buffer, ok := r.(interface {
+		Bytes() []byte
+	}); ok {
+		return New(buffer.Bytes()), nil
+	}
 
-    // Otherwise, read in everything
-    b, err := ioutil.ReadAll(r)
-    if err != nil {
-        return nil, err
-    }
+	// Otherwise, read in everything
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
 	return New(b), nil // TODO: don't use restorer, use custom ReadAll that already adds a NULL
 }
 
 // NewString returns a new Lexer for a given string.
 func NewString(s string) *Lexer {
-    return New([]byte(s)) // TODO: allocate one more byte
+	return New([]byte(s)) // TODO: allocate one more byte
 }
 
 // New returns a new Lexer for a given byte slice and appends NULL at the end.
@@ -47,31 +47,31 @@ func New(b []byte) *Lexer {
 	if len(b) == 0 {
 		l.buf = nullBuffer
 	} else {
-        l.buf, l.restorer = NullTerminator(b)
+		l.buf, l.restorer = NullTerminator(b)
 	}
-    return l
+	return l
 }
 
 // Close needs to be called when done with the lexer.
 func (z *Lexer) Close() {
-    z.restorer.Restore()
+	z.restorer.Restore()
 }
 
 // Err returns io.EOF when the current position is at the end of the buffer.
 func (z *Lexer) Err() error {
 	if z.pos >= len(z.buf)-1 {
-        return io.EOF
-    }
-    return nil
+		return io.EOF
+	}
+	return nil
 }
 
 // PeekErr returns io.EOF when the position is at the end of the buffer.
 // When pos is zero, this is the same as calling Err.
 func (z *Lexer) PeekErr(pos int) error {
 	if z.pos+pos >= len(z.buf)-1 {
-        return io.EOF
-    }
-    return nil
+		return io.EOF
+	}
+	return nil
 }
 
 // Peek returns the ith byte relative to the end position.
@@ -132,7 +132,7 @@ func (z *Lexer) Offset() int {
 	return z.pos
 }
 
-// Buffer returns the underlying buffer.
+// Bytes returns the underlying buffer.
 func (z *Lexer) Bytes() []byte {
-    return z.buf[:len(z.buf)-1]
+	return z.buf[:len(z.buf)-1]
 }
