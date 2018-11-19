@@ -2,7 +2,6 @@ package buffer // import "github.com/tdewolff/parse/buffer"
 
 import (
 	"bytes"
-	"io"
 	"testing"
 
 	"github.com/tdewolff/test"
@@ -10,9 +9,9 @@ import (
 
 func TestLexer(t *testing.T) {
 	s := `Lorem ipsum dolor sit amet, consectetur adipiscing elit.`
-	z := New([]byte(s))
+	z := NewLexer([]byte(s))
 
-	test.T(t, z.Err(), nil, "buffer is at EOF but must not return EOF until we reach that")
+	test.T(t, z.IsEOF(), false, "buffer is at EOF but must not return EOF until we reach that")
 	test.That(t, z.Pos() == 0, "buffer must start at position 0")
 	test.That(t, z.Peek(0) == 'L', "first character must be 'L'")
 	test.That(t, z.Peek(1) == 'o', "second character must be 'o'")
@@ -31,20 +30,20 @@ func TestLexer(t *testing.T) {
 	test.That(t, z.Pos() == 0, "after shifting position must be 0")
 	test.That(t, z.Peek(0) == 'i', "must be 'i' at position 0 after shifting")
 	test.That(t, z.Peek(1) == 'p', "must be 'p' at position 1 after shifting")
-	test.T(t, z.Err(), nil, "error must be nil at this point")
+	test.T(t, z.IsEOF(), false, "error must be nil at this point")
 
 	z.Move(len(s) - len("Lorem ") - 1)
-	test.T(t, z.Err(), nil, "error must be nil just before the end of the buffer")
+	test.T(t, z.IsEOF(), false, "error must be nil just before the end of the buffer")
 	z.Skip()
 	test.That(t, z.Pos() == 0, "after skipping position must be 0")
 	z.Move(1)
-	test.T(t, z.Err(), io.EOF, "error must be EOF when past the buffer")
+	test.T(t, z.IsEOF(), true, "error must be EOF when past the buffer")
 	z.Move(-1)
-	test.T(t, z.Err(), nil, "error must be nil just before the end of the buffer, even when it has been past the buffer")
+	test.T(t, z.IsEOF(), false, "error must be nil just before the end of the buffer, even when it has been past the buffer")
 }
 
 func TestLexerRunes(t *testing.T) {
-	z := New([]byte("aæ†\U00100000"))
+	z := NewLexer([]byte("aæ†\U00100000"))
 	r, n := z.PeekRune(0)
 	test.That(t, n == 1, "first character must be length 1")
 	test.That(t, r == 'a', "first character must be rune 'a'")
@@ -60,33 +59,33 @@ func TestLexerRunes(t *testing.T) {
 }
 
 func TestLexerBadRune(t *testing.T) {
-	z := New([]byte("\xF0")) // expect four byte rune
+	z := NewLexer([]byte("\xF0")) // expect four byte rune
 	r, n := z.PeekRune(0)
 	test.T(t, n, 1, "length")
 	test.T(t, r, rune(0xF0), "rune")
 }
 
 func TestLexerZeroLen(t *testing.T) {
-	z, err := NewReader(test.NewPlainReader(bytes.NewBufferString("")))
+	z, err := NewLexerReader(test.NewPlainReader(bytes.NewBufferString("")))
 	test.Error(t, err)
 	test.That(t, z.Peek(0) == 0, "first character must yield error")
 }
 
 func TestLexerEmptyReader(t *testing.T) {
-	z, err := NewReader(test.NewEmptyReader())
+	z, err := NewLexerReader(test.NewEmptyReader())
 	test.Error(t, err)
 	test.That(t, z.Peek(0) == 0, "first character must yield error")
-	test.T(t, z.Err(), io.EOF, "error must be EOF")
+	test.T(t, z.IsEOF(), true, "error must be EOF")
 	test.That(t, z.Peek(0) == 0, "second peek must also yield error")
 }
 
 func TestLexerErrorReader(t *testing.T) {
-	_, err := NewReader(test.NewErrorReader(0))
+	_, err := NewLexerReader(test.NewErrorReader(0))
 	test.T(t, err, test.ErrPlain)
 }
 
 func TestLexerBytes(t *testing.T) {
 	b := []byte{'t', 'e', 's', 't'}
-	z := New(b)
+	z := NewLexer(b)
 	test.That(t, z.Peek(4) == 0, "fifth character must yield NULL")
 }

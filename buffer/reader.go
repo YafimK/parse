@@ -9,11 +9,11 @@ type Reader struct {
 }
 
 // NewReader returns a new Reader for a given byte slice.
-// func NewReader(buf []byte) *Reader {
-// 	return &Reader{
-// 		buf: buf,
-// 	}
-// }
+func NewReader(buf []byte) *Reader {
+	return &Reader{
+		buf: buf,
+	}
+}
 
 // Read reads bytes into the given byte slice and returns the number of bytes read and an error if occurred.
 func (r *Reader) Read(b []byte) (n int, err error) {

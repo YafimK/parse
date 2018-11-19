@@ -4,6 +4,7 @@ package js // import "github.com/tdewolff/parse/js"
 import (
 	"strconv"
 	"unicode"
+    "io"
 
 	"github.com/tdewolff/parse/v2/buffer"
 )
@@ -122,7 +123,10 @@ func (l *Lexer) leaveContext() ParsingContext {
 
 // Err returns the error encountered during lexing, this is often io.EOF but also other errors can be returned.
 func (l *Lexer) Err() error {
-	return l.r.Err()
+    if l.r.IsEOF() {
+        return io.EOF
+    }
+    return nil
 }
 
 // Next returns the next Token. It returns ErrorToken when an error was encountered. Using Err() one can retrieve the error message.
@@ -243,7 +247,7 @@ func (l *Lexer) Next() (TokenType, []byte) {
 				}
 				tt = LineTerminatorToken
 			}
-		} else if l.r.Err() != nil {
+		} else if c == 0 && l.r.IsEOF() {
 			return ErrorToken, nil
 		}
 	}
@@ -358,7 +362,7 @@ func (l *Lexer) consumeUnicodeEscape() bool {
 func (l *Lexer) consumeSingleLineComment() {
 	for {
 		c := l.r.Peek(0)
-		if c == '\r' || c == '\n' || c == 0 && l.r.Err() != nil {
+		if c == '\r' || c == '\n' || c == 0 && l.r.IsEOF() {
 			break
 		} else if c >= 0xC0 {
 			if r, _ := l.r.PeekRune(0); r == '\u2028' || r == '\u2029' {
@@ -406,7 +410,7 @@ func (l *Lexer) consumeCommentToken() TokenType {
 				if c == '*' && l.r.Peek(1) == '/' {
 					l.r.Move(2)
 					break
-				} else if c == 0 && l.r.Err() != nil {
+				} else if c == 0 && l.r.IsEOF() {
 					break
 				} else if l.consumeLineTerminator() {
 					tt = MultiLineCommentToken
@@ -569,7 +573,7 @@ func (l *Lexer) consumeStringToken() bool {
 				}
 			}
 			continue
-		} else if l.consumeLineTerminator() || c == 0 && l.r.Err() != nil {
+		} else if l.consumeLineTerminator() || c == 0 && l.r.IsEOF() {
 			l.r.Rewind(mark)
 			return false
 		}
@@ -594,11 +598,11 @@ func (l *Lexer) consumeRegexpToken() bool {
 			inClass = false
 		} else if c == '\\' {
 			l.r.Move(1)
-			if l.consumeLineTerminator() || l.r.Peek(0) == 0 && l.r.Err() != nil {
+			if l.consumeLineTerminator() || l.r.Peek(0) == 0 && l.r.IsEOF() {
 				l.r.Rewind(mark)
 				return false
 			}
-		} else if l.consumeLineTerminator() || c == 0 && l.r.Err() != nil {
+		} else if l.consumeLineTerminator() || c == 0 && l.r.IsEOF() {
 			l.r.Rewind(mark)
 			return false
 		}
@@ -643,7 +647,7 @@ func (l *Lexer) consumeTemplateToken() bool {
 				l.r.Move(1)
 			}
 			continue
-		} else if c == 0 && l.r.Err() != nil {
+		} else if c == 0 && l.r.IsEOF() {
 			l.r.Rewind(mark)
 			return false
 		}

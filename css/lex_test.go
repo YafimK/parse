@@ -76,7 +76,7 @@ func TestTokens(t *testing.T) {
 		{"U+? U+A?", TTs{IdentToken, DelimToken, DelimToken, IdentToken, DelimToken, IdentToken, DelimToken}},
 		{"-5.23 -moz", TTs{NumberToken, IdentToken}},
 		{"()", TTs{LeftParenthesisToken, RightParenthesisToken}},
-		{"url( //url  )", TTs{URLToken}},
+		{"url( //url\n )", TTs{URLToken}},
 		{"url( ", TTs{URLToken}},
 		{"url( //url", TTs{URLToken}},
 		{"url(\")a", TTs{URLToken}},
@@ -97,7 +97,7 @@ func TestTokens(t *testing.T) {
 	}
 	for _, tt := range tokenTests {
 		t.Run(tt.css, func(t *testing.T) {
-			l := NewLexer(buffer.NewString(tt.css))
+			l := NewLexer(buffer.NewLexerString(tt.css))
 			i := 0
 			for {
 				token, _ := l.Next()
@@ -123,13 +123,13 @@ func TestTokens(t *testing.T) {
 			break
 		}
 	}
-	test.T(t, NewLexer(buffer.NewString("x")).consumeBracket(), ErrorToken, "consumeBracket on 'x' must return error")
+	test.T(t, NewLexer(buffer.NewLexerString("x")).consumeBracket(), ErrorToken, "consumeBracket on 'x' must return error")
 }
 
 ////////////////////////////////////////////////////////////////
 
 func ExampleNewLexer() {
-	l := NewLexer(buffer.NewString("color: red;"))
+	l := NewLexer(buffer.NewLexerString("color: red;"))
 	out := ""
 	for {
 		tt, data := l.Next()

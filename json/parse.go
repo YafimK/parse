@@ -3,6 +3,7 @@ package json // import "github.com/tdewolff/parse/json"
 
 import (
 	"strconv"
+    "io"
 
 	"github.com/tdewolff/parse/v2"
 	"github.com/tdewolff/parse/v2/buffer"
@@ -100,8 +101,10 @@ func NewParser(bl *buffer.Lexer) *Parser {
 func (p *Parser) Err() error {
 	if p.err != nil {
 		return p.err
-	}
-	return p.r.Err()
+	} else if p.r.IsEOF() {
+        return io.EOF
+    }
+    return nil
 }
 
 // Next returns the next Grammar. It returns ErrorGrammar when an error was encountered. Using Err() one can retrieve the error message.
@@ -181,7 +184,7 @@ func (p *Parser) Next() (GrammarType, []byte) {
 			return NumberGrammar, p.r.Shift()
 		} else if p.consumeLiteralToken() {
 			return LiteralGrammar, p.r.Shift()
-		} else if c == 0 && p.r.Err() == nil {
+		} else if c == 0 && !p.r.IsEOF() {
 			p.err = parse.NewErrorLexer("unexpected NULL character", p.r)
 		}
 	}

@@ -2,6 +2,7 @@ package parse
 
 import (
 	"fmt"
+    "io"
 
 	"github.com/tdewolff/parse/v2/buffer"
 )
@@ -10,31 +11,32 @@ import (
 type Error struct {
 	Message string
 	Offset  int
-	l       *buffer.Lexer
+
+	r       io.Reader
 	line    int
 	column  int
 	context string
 }
 
 // NewError creates a new error.
-func NewError(msg string, l *buffer.Lexer, offset int) *Error {
+func NewError(msg string, r io.Reader, offset int) *Error {
 	return &Error{
 		Message: msg,
 		Offset:  offset,
-		l:       l,
+		r:       r,
 	}
 }
 
 // NewErrorLexer creates a new error from an active *buffer.Lexer.
 func NewErrorLexer(msg string, l *buffer.Lexer) *Error {
-	return NewError(msg, buffer.New(l.Bytes()), l.Offset())
+	return NewError(msg, buffer.NewBytesReader(l.Buffer()), l.Offset())
 }
 
 // Positions re-parses the file to determine the line, column, and context of the error.
 // Context is the entire line at which the error occurred.
 func (e *Error) Position() (int, int, string) {
 	if e.line == 0 {
-		e.line, e.column, e.context, _ = Position(e.l, e.Offset)
+		e.line, e.column, e.context = Position(e.r, e.Offset)
 	}
 	return e.line, e.column, e.context
 }

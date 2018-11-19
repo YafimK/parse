@@ -3,6 +3,7 @@ package xml // import "github.com/tdewolff/parse/xml"
 
 import (
 	"strconv"
+    "io"
 
 	"github.com/tdewolff/parse/v2"
 	"github.com/tdewolff/parse/v2/buffer"
@@ -82,8 +83,10 @@ func NewLexer(bl *buffer.Lexer) *Lexer {
 func (l *Lexer) Err() error {
 	if l.err != nil {
 		return l.err
-	}
-	return l.r.Err()
+	} else if l.r.IsEOF() {
+        return io.EOF
+    }
+	return nil
 }
 
 // Next returns the next Token. It returns ErrorToken when an error was encountered. Using Err() one can retrieve the error message.
@@ -100,7 +103,7 @@ func (l *Lexer) Next() (TokenType, []byte) {
 			break
 		}
 		if c == 0 {
-			if l.r.Err() == nil {
+			if !l.r.IsEOF() {
 				l.err = parse.NewErrorLexer("unexpected null character", l.r)
 			}
 			return ErrorToken, nil
@@ -159,7 +162,7 @@ func (l *Lexer) Next() (TokenType, []byte) {
 			if l.r.Pos() > 0 {
 				return TextToken, l.r.Shift()
 			}
-			if l.r.Err() == nil {
+			if !l.r.IsEOF() {
 				l.err = parse.NewErrorLexer("unexpected null character", l.r)
 			}
 			return ErrorToken, nil

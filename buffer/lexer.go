@@ -16,15 +16,15 @@ type Lexer struct {
 	restorer NullRestorer
 }
 
-// NewReader returns a new Lexer for a given io.Reader and uses ioutil.ReadAll to read it into a byte slice.
+// NewLexerReader returns a new Lexer for a given io.Reader and uses ioutil.ReadAll to read it into a byte slice.
 // If the io.Reader has Bytes implemented, that will be used instead.
-// It will append a NULL at the end of the buffer.
-func NewReader(r io.Reader) (*Lexer, error) {
+// It will append a NULL at the end of the buffer. Call Restore() when done.
+func NewLexerReader(r io.Reader) (*Lexer, error) {
 	// Use Bytes() if implemented
 	if buffer, ok := r.(interface {
 		Bytes() []byte
 	}); ok {
-		return New(buffer.Bytes()), nil
+		return NewLexer(buffer.Bytes()), nil
 	}
 
 	// Otherwise, read in everything
@@ -32,17 +32,21 @@ func NewReader(r io.Reader) (*Lexer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return New(b), nil // TODO: don't use restorer, use custom ReadAll that already adds a NULL
+	return NewLexer(b), nil // TODO: don't use restorer, use custom ReadAll that already adds a NULL
 }
 
-// NewString returns a new Lexer for a given string.
-func NewString(s string) *Lexer {
-	return New([]byte(s)) // TODO: allocate one more byte
+// NewLexerString returns a new Lexer for a given string.
+func NewLexerString(s string) *Lexer {
+    b := make([]byte, len(s)+1) // last byte initializes to NULL
+    _ = copy(b, s)
+	return &Lexer{
+        buf: b,
+    }
 }
 
-// New returns a new Lexer for a given byte slice and appends NULL at the end.
+// NewLexer returns a new Lexer for a given byte slice and appends NULL at the end. Call Restore() when done.
 // To avoid reallocation, make sure the capacity has room for one more byte.
-func New(b []byte) *Lexer {
+func NewLexer(b []byte) (*Lexer) {
 	l := &Lexer{}
 	if len(b) == 0 {
 		l.buf = nullBuffer
@@ -52,30 +56,23 @@ func New(b []byte) *Lexer {
 	return l
 }
 
-// Close needs to be called when done with the lexer.
-func (z *Lexer) Close() {
+// Restore needs to be called when done with the lexer in some cases.
+func (z *Lexer) Restore() {
 	z.restorer.Restore()
 }
 
-// Err returns io.EOF when the current position is at the end of the buffer.
-func (z *Lexer) Err() error {
-	if z.pos >= len(z.buf)-1 {
-		return io.EOF
-	}
-	return nil
+// IsEOF returns true when the current position is at or past the end of the buffer.
+func (z *Lexer) IsEOF() bool {
+	return z.pos >= len(z.buf)-1
 }
 
-// PeekErr returns io.EOF when the position is at the end of the buffer.
-// When pos is zero, this is the same as calling Err.
-func (z *Lexer) PeekErr(pos int) error {
-	if z.pos+pos >= len(z.buf)-1 {
-		return io.EOF
-	}
-	return nil
+// PeekIsEOF returns true when the position is at or past the end of the buffer.
+func (z *Lexer) PeekIsEOF(pos int) bool {
+	return z.pos+pos >= len(z.buf)-1
 }
 
 // Peek returns the ith byte relative to the end position.
-// Peek returns 0 when an error has occurred, Err returns the error.
+// When Peek returns 0, check IsEOF to see if this is the end or whether 0 is part of the buffer.
 func (z *Lexer) Peek(pos int) byte {
 	pos += z.pos
 	return z.buf[pos]
@@ -132,7 +129,7 @@ func (z *Lexer) Offset() int {
 	return z.pos
 }
 
-// Bytes returns the underlying buffer.
-func (z *Lexer) Bytes() []byte {
+// Buffer returns the underlying buffer.
+func (z *Lexer) Buffer() []byte {
 	return z.buf[:len(z.buf)-1]
 }

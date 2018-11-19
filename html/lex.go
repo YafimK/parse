@@ -3,6 +3,7 @@ package html // import "github.com/tdewolff/parse/html"
 
 import (
 	"strconv"
+    "io"
 
 	"github.com/tdewolff/parse/v2"
 	"github.com/tdewolff/parse/v2/buffer"
@@ -80,8 +81,10 @@ func NewLexer(bl *buffer.Lexer) *Lexer {
 func (l *Lexer) Err() error {
 	if l.err != nil {
 		return l.err
-	}
-	return l.r.Err()
+	} else if l.r.IsEOF() {
+        return io.EOF
+    }
+	return nil
 }
 
 // Next returns the next Token. It returns ErrorToken when an error was encountered. Using Err() one can retrieve the error message.
@@ -97,7 +100,7 @@ func (l *Lexer) Next() (TokenType, []byte) {
 			}
 			break
 		}
-		if c == 0 && l.r.Err() != nil {
+		if c == 0 && l.r.IsEOF() {
 			return ErrorToken, nil
 		} else if c != '>' && (c != '/' || l.r.Peek(1) != '>') {
 			return AttributeToken, l.shiftAttribute()
@@ -126,7 +129,7 @@ func (l *Lexer) Next() (TokenType, []byte) {
 		c = l.r.Peek(0)
 		if c == '<' {
 			c = l.r.Peek(1)
-			isEndTag := c == '/' && l.r.Peek(2) != '>' && (l.r.Peek(2) != 0 || l.r.PeekErr(2) == nil)
+			isEndTag := c == '/' && l.r.Peek(2) != '>' && (l.r.Peek(2) != 0 || !l.r.PeekIsEOF(2))
 			if l.r.Pos() > 0 {
 				if isEndTag || 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '!' || c == '?' {
 					// return currently buffered texttoken so that we can return tag next iteration
@@ -150,7 +153,7 @@ func (l *Lexer) Next() (TokenType, []byte) {
 				l.r.Move(1)
 				return CommentToken, l.shiftBogusComment()
 			}
-		} else if c == 0 && l.r.Err() != nil {
+		} else if c == 0 && l.r.IsEOF() {
 			if l.r.Pos() > 0 {
 				return TextToken, l.r.Shift()
 			}
@@ -177,7 +180,7 @@ func (l *Lexer) AttrVal() []byte {
 func (l *Lexer) shiftRawText() []byte {
 	if l.rawTag == Plaintext {
 		for {
-			if l.r.Peek(0) == 0 && l.r.Err() != nil {
+			if l.r.Peek(0) == 0 && l.r.IsEOF() {
 				return l.r.Shift()
 			}
 			l.r.Move(1)
@@ -232,7 +235,7 @@ func (l *Lexer) shiftRawText() []byte {
 									inScript = false
 								}
 							}
-						} else if c == 0 && l.r.Err() != nil {
+						} else if c == 0 && l.r.IsEOF() {
 							return l.r.Shift()
 						} else {
 							l.r.Move(1)
@@ -241,7 +244,7 @@ func (l *Lexer) shiftRawText() []byte {
 				} else {
 					l.r.Move(1)
 				}
-			} else if c == 0 && l.r.Err() != nil {
+			} else if c == 0 && l.r.IsEOF() {
 				return l.r.Shift()
 			} else {
 				l.r.Move(1)
@@ -254,7 +257,7 @@ func (l *Lexer) readMarkup() (TokenType, []byte) {
 	if l.at('-', '-') {
 		l.r.Move(2)
 		for {
-			if l.r.Peek(0) == 0 && l.r.Err() != nil {
+			if l.r.Peek(0) == 0 && l.r.IsEOF() {
 				return CommentToken, l.r.Shift()
 			} else if l.at('-', '-', '>') {
 				l.text = l.r.Lexeme()[4:]
@@ -270,7 +273,7 @@ func (l *Lexer) readMarkup() (TokenType, []byte) {
 	} else if l.at('[', 'C', 'D', 'A', 'T', 'A', '[') {
 		l.r.Move(7)
 		for {
-			if l.r.Peek(0) == 0 && l.r.Err() != nil {
+			if l.r.Peek(0) == 0 && l.r.IsEOF() {
 				return TextToken, l.r.Shift()
 			} else if l.at(']', ']', '>') {
 				l.r.Move(3)
@@ -285,7 +288,7 @@ func (l *Lexer) readMarkup() (TokenType, []byte) {
 				l.r.Move(1)
 			}
 			for {
-				if c := l.r.Peek(0); c == '>' || c == 0 && l.r.Err() != nil {
+				if c := l.r.Peek(0); c == '>' || c == 0 && l.r.IsEOF() {
 					l.text = l.r.Lexeme()[9:]
 					if c == '>' {
 						l.r.Move(1)
@@ -306,7 +309,7 @@ func (l *Lexer) shiftBogusComment() []byte {
 			l.text = l.r.Lexeme()[2:]
 			l.r.Move(1)
 			return l.r.Shift()
-		} else if c == 0 && l.r.Err() != nil {
+		} else if c == 0 && l.r.IsEOF() {
 			l.text = l.r.Lexeme()[2:]
 			return l.r.Shift()
 		}
@@ -316,7 +319,7 @@ func (l *Lexer) shiftBogusComment() []byte {
 
 func (l *Lexer) shiftStartTag() (TokenType, []byte) {
 	for {
-		if c := l.r.Peek(0); c == ' ' || c == '>' || c == '/' && l.r.Peek(1) == '>' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == 0 && l.r.Err() != nil {
+		if c := l.r.Peek(0); c == ' ' || c == '>' || c == '/' && l.r.Peek(1) == '>' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == 0 && l.r.IsEOF() {
 			break
 		}
 		l.r.Move(1)
@@ -345,7 +348,7 @@ func (l *Lexer) shiftAttribute() []byte {
 	nameStart := l.r.Pos()
 	var c byte
 	for { // attribute name state
-		if c = l.r.Peek(0); c == ' ' || c == '=' || c == '>' || c == '/' && l.r.Peek(1) == '>' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == 0 && l.r.Err() != nil {
+		if c = l.r.Peek(0); c == ' ' || c == '=' || c == '>' || c == '/' && l.r.Peek(1) == '>' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == 0 && l.r.IsEOF() {
 			break
 		}
 		l.r.Move(1)
@@ -376,14 +379,14 @@ func (l *Lexer) shiftAttribute() []byte {
 				if c == delim {
 					l.r.Move(1)
 					break
-				} else if c == 0 && l.r.Err() != nil {
+				} else if c == 0 && l.r.IsEOF() {
 					break
 				}
 				l.r.Move(1)
 			}
 		} else { // attribute value unquoted state
 			for {
-				if c := l.r.Peek(0); c == ' ' || c == '>' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == 0 && l.r.Err() != nil {
+				if c := l.r.Peek(0); c == ' ' || c == '>' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == 0 && l.r.IsEOF() {
 					break
 				}
 				l.r.Move(1)
@@ -405,7 +408,7 @@ func (l *Lexer) shiftEndTag() []byte {
 			l.text = l.r.Lexeme()[2:]
 			l.r.Move(1)
 			break
-		} else if c == 0 && l.r.Err() != nil {
+		} else if c == 0 && l.r.IsEOF() {
 			l.text = l.r.Lexeme()[2:]
 			break
 		}
@@ -446,7 +449,7 @@ func (l *Lexer) shiftXml(rawTag Hash) []byte {
 				break
 			}
 		} else if c == 0 {
-			if l.r.Err() == nil {
+			if !l.r.IsEOF() {
 				l.err = parse.NewErrorLexer("unexpected null character", l.r)
 			}
 			return l.r.Shift()
@@ -461,7 +464,7 @@ func (l *Lexer) shiftXml(rawTag Hash) []byte {
 			l.r.Move(1)
 			break
 		} else if c == 0 {
-			if l.r.Err() == nil {
+			if !l.r.IsEOF() {
 				l.err = parse.NewErrorLexer("unexpected null character", l.r)
 			}
 			return l.r.Shift()

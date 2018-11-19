@@ -150,7 +150,10 @@ func NewLexer(bl *buffer.Lexer) *Lexer {
 
 // Err returns the error encountered during lexing, this is often io.EOF but also other errors can be returned.
 func (l *Lexer) Err() error {
-	return l.r.Err()
+    if l.r.IsEOF() {
+        return io.EOF
+    }
+	return nil
 }
 
 // Next returns the next Token. It returns ErrorToken when an error was encountered. Using Err() one can retrieve the error message.
@@ -229,7 +232,7 @@ func (l *Lexer) Next() (TokenType, []byte) {
 			return ColumnToken, l.r.Shift()
 		}
 	case 0:
-		if l.r.Err() != nil {
+		if l.r.IsEOF() {
 			return ErrorToken, nil
 		}
 	default:
@@ -265,7 +268,7 @@ func (l *Lexer) consumeComment() bool {
 	l.r.Move(2)
 	for {
 		c := l.r.Peek(0)
-		if c == 0 && l.r.Err() != nil {
+		if c == 0 && l.r.IsEOF() {
 			break
 		} else if c == '*' && l.r.Peek(1) == '/' {
 			l.r.Move(2)
@@ -342,7 +345,7 @@ func (l *Lexer) consumeEscape() bool {
 			_, n := l.r.PeekRune(0)
 			l.r.Move(n)
 			return true
-		} else if c == 0 && l.r.Err() != nil {
+		} else if c == 0 && l.r.IsEOF() {
 			return true
 		}
 	}
@@ -623,7 +626,7 @@ func (l *Lexer) consumeString() TokenType {
 	l.r.Move(1)
 	for {
 		c := l.r.Peek(0)
-		if c == 0 && l.r.Err() != nil {
+		if c == 0 && l.r.IsEOF() {
 			break
 		} else if c == '\n' || c == '\r' || c == '\f' {
 			l.r.Move(1)
@@ -646,9 +649,10 @@ func (l *Lexer) consumeString() TokenType {
 func (l *Lexer) consumeUnquotedURL() bool {
 	for {
 		c := l.r.Peek(0)
-		if c == 0 && l.r.Err() != nil || c == ')' {
+		if c == 0 && l.r.IsEOF() || c == ')' {
 			break
 		} else if c == '"' || c == '\'' || c == '(' || c == '\\' || c == ' ' || c <= 0x1F || c == 0x7F {
+            // catches all whitespace characters
 			if c != '\\' || !l.consumeEscape() {
 				return false
 			}
@@ -662,7 +666,7 @@ func (l *Lexer) consumeUnquotedURL() bool {
 // consumeRemnantsBadUrl consumes bytes of a BadUrlToken so that normal tokenization may continue.
 func (l *Lexer) consumeRemnantsBadURL() {
 	for {
-		if l.consumeByte(')') || l.r.Err() != nil {
+		if l.consumeByte(')') || l.r.IsEOF() {
 			break
 		} else if !l.consumeEscape() {
 			l.r.Move(1)
@@ -689,13 +693,13 @@ func (l *Lexer) consumeIdentlike() TokenType {
 				l.consumeRemnantsBadURL()
 				return BadURLToken
 			}
-		} else if !l.consumeUnquotedURL() && !l.consumeWhitespace() {
+		} else if !l.consumeUnquotedURL() && !l.consumeWhitespace() { // if unquoted URL fails due to encountering whitespace, continue
 			l.consumeRemnantsBadURL()
 			return BadURLToken
 		}
 		for l.consumeWhitespace() {
 		}
-		if !l.consumeByte(')') && l.r.Err() != io.EOF {
+		if !l.consumeByte(')') && !l.r.IsEOF() {
 			l.consumeRemnantsBadURL()
 			return BadURLToken
 		}
