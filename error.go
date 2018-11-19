@@ -2,7 +2,7 @@ package parse
 
 import (
 	"fmt"
-    "io"
+	"io"
 
 	"github.com/tdewolff/parse/v2/buffer"
 )
@@ -29,7 +29,7 @@ func NewError(msg string, r io.Reader, offset int) *Error {
 
 // NewErrorLexer creates a new error from an active *buffer.Lexer.
 func NewErrorLexer(msg string, l *buffer.Lexer) *Error {
-	return NewError(msg, buffer.NewBytesReader(l.Buffer()), l.Offset())
+	return NewError(msg, buffer.NewReader(l.Buffer()), l.Offset())
 }
 
 // Positions re-parses the file to determine the line, column, and context of the error.

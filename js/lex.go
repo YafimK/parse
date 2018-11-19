@@ -2,9 +2,9 @@
 package js // import "github.com/tdewolff/parse/js"
 
 import (
+	"io"
 	"strconv"
 	"unicode"
-    "io"
 
 	"github.com/tdewolff/parse/v2/buffer"
 )
@@ -123,10 +123,10 @@ func (l *Lexer) leaveContext() ParsingContext {
 
 // Err returns the error encountered during lexing, this is often io.EOF but also other errors can be returned.
 func (l *Lexer) Err() error {
-    if l.r.IsEOF() {
-        return io.EOF
-    }
-    return nil
+	if l.r.IsEOF() {
+		return io.EOF
+	}
+	return nil
 }
 
 // Next returns the next Token. It returns ErrorToken when an error was encountered. Using Err() one can retrieve the error message.

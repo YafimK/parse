@@ -37,16 +37,16 @@ func NewLexerReader(r io.Reader) (*Lexer, error) {
 
 // NewLexerString returns a new Lexer for a given string.
 func NewLexerString(s string) *Lexer {
-    b := make([]byte, len(s)+1) // last byte initializes to NULL
-    _ = copy(b, s)
+	b := make([]byte, len(s)+1) // last byte initializes to NULL
+	_ = copy(b, s)
 	return &Lexer{
-        buf: b,
-    }
+		buf: b,
+	}
 }
 
 // NewLexer returns a new Lexer for a given byte slice and appends NULL at the end. Call Restore() when done.
 // To avoid reallocation, make sure the capacity has room for one more byte.
-func NewLexer(b []byte) (*Lexer) {
+func NewLexer(b []byte) *Lexer {
 	l := &Lexer{}
 	if len(b) == 0 {
 		l.buf = nullBuffer

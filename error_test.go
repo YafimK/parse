@@ -1,8 +1,8 @@
 package parse
 
 import (
+	"bytes"
 	"testing"
-    "bytes"
 
 	"github.com/tdewolff/parse/v2/buffer"
 	"github.com/tdewolff/test"

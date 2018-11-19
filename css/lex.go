@@ -150,9 +150,9 @@ func NewLexer(bl *buffer.Lexer) *Lexer {
 
 // Err returns the error encountered during lexing, this is often io.EOF but also other errors can be returned.
 func (l *Lexer) Err() error {
-    if l.r.IsEOF() {
-        return io.EOF
-    }
+	if l.r.IsEOF() {
+		return io.EOF
+	}
 	return nil
 }
 
@@ -652,7 +652,7 @@ func (l *Lexer) consumeUnquotedURL() bool {
 		if c == 0 && l.r.IsEOF() || c == ')' {
 			break
 		} else if c == '"' || c == '\'' || c == '(' || c == '\\' || c == ' ' || c <= 0x1F || c == 0x7F {
-            // catches all whitespace characters
+			// catches all whitespace characters
 			if c != '\\' || !l.consumeEscape() {
 				return false
 			}

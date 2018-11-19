@@ -1,12 +1,12 @@
 package buffer // import "github.com/tdewolff/parse/buffer"
 
 import (
-    "bytes"
-    "fmt"
-    "io"
-    "testing"
+	"bytes"
+	"fmt"
+	"io"
+	"testing"
 
-    "github.com/tdewolff/test"
+	"github.com/tdewolff/test"
 )
 
 func TestReader(t *testing.T) {

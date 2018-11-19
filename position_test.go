@@ -1,9 +1,9 @@
 package parse
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
-    "bytes"
 
 	"github.com/tdewolff/test"
 )

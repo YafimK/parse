@@ -2,8 +2,8 @@
 package json // import "github.com/tdewolff/parse/json"
 
 import (
+	"io"
 	"strconv"
-    "io"
 
 	"github.com/tdewolff/parse/v2"
 	"github.com/tdewolff/parse/v2/buffer"
@@ -102,9 +102,9 @@ func (p *Parser) Err() error {
 	if p.err != nil {
 		return p.err
 	} else if p.r.IsEOF() {
-        return io.EOF
-    }
-    return nil
+		return io.EOF
+	}
+	return nil
 }
 
 // Next returns the next Grammar. It returns ErrorGrammar when an error was encountered. Using Err() one can retrieve the error message.

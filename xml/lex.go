@@ -2,8 +2,8 @@
 package xml // import "github.com/tdewolff/parse/xml"
 
 import (
+	"io"
 	"strconv"
-    "io"
 
 	"github.com/tdewolff/parse/v2"
 	"github.com/tdewolff/parse/v2/buffer"
@@ -84,8 +84,8 @@ func (l *Lexer) Err() error {
 	if l.err != nil {
 		return l.err
 	} else if l.r.IsEOF() {
-        return io.EOF
-    }
+		return io.EOF
+	}
 	return nil
 }
 
